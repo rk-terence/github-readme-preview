@@ -1,0 +1,38 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+
+<Layout title="选择文件！">
+    <h1>输入渲染的文件信息</h1>
+    <form id="form">
+      <label>
+        用户：
+        <input type="text" name="user" required />
+      </label>
+      <label>
+        仓库：
+        <input type="text" name="repo" required />
+      </label>
+      <label>
+        路径：
+        <input type="text" name="path" required />
+      </label>
+      <button>Go！</button>
+    </form>
+</Layout>
+
+
+<script>
+    const form = document.getElementById("form");
+    const user = document.querySelector("input[name=user]");
+    const repo = document.querySelector("input[name=repo]");
+    const path = document.querySelector("input[name=path]");
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const url = `/repos/${user.value}/${repo.value}/contents/${path.value}`;
+
+        window.location.href = url;
+    });
+</script>
