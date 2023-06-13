@@ -10,6 +10,14 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^2.5.6"
+    "@astrojs/netlify": "^2.3.0",
+    "astro": "^2.6.3",
+    "rehype-katex": "^6.0.3",
+    "rehype-stringify": "^9.0.3",
+    "remark-gfm": "^3.0.1",
+    "remark-math": "^5.1.1",
+    "remark-parse": "^10.0.2",
+    "remark-rehype": "^10.1.0",
+    "unified": "^10.1.2"
   }
 }
