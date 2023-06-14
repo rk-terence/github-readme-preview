@@ -1,38 +1,115 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import remarkRehype from 'remark-rehype';
+import rehypeKatex from 'rehype-katex';
+import rehypeStringify from 'rehype-stringify';
+
+
+const user = Astro.url.searchParams.get('user');
+const repo = Astro.url.searchParams.get('repo');
+const path = Astro.url.searchParams.get('path');
+const authToken = Astro.url.searchParams.get('authToken');
+
+let promise: Promise<string>;
+
+if (user && repo && path) {
+  promise = fetch(
+  `https://api.github.com/repos/${user}/${repo}/contents/${path}`,
+  {
+		headers: {
+			'Accept': 'application/vnd.github.raw',
+			'Authorization': `token ${authToken || import.meta.env.GITHUB_AUTH_TOKEN}`
+		}
+	}
+)
+  .then(res => {
+    if (res.status === 200) {
+      return res.text();
+    } else {
+      return Promise.reject(res);
+    }
+  })
+  .then(raw => {
+      const processor = unified()
+          .use(remarkParse)
+          .use(remarkGfm)
+          .use(remarkMath)
+          .use(remarkRehype)
+          .use(rehypeKatex)
+          .use(rehypeStringify);
+      return processor.process(raw);
+  })
+  .then( file => file.toString() )
+  .catch( err => {
+    if (err.status === 404) {
+      return '文件不存在！';
+    } else {
+      return '出现了未知错误！';
+    }
+  });
+} else {
+  promise = Promise.resolve('输入正确的文件信息后此处将会显示渲染后的 markdown 文档');
+}
+
+
+const title = path || '选择文件！';
 ---
 
 
 <Layout title="选择文件！">
-    <h1>输入渲染的文件信息</h1>
+    <h4>输入渲染的文件信息</h4>
     <form id="form">
       <label>
         用户：
-        <input type="text" name="user" required />
+        <input type="text" name="user" value={user || ''} required />
       </label>
       <label>
         仓库：
-        <input type="text" name="repo" required />
+        <input type="text" name="repo" value={repo || ''} required />
       </label>
       <label>
         路径：
-        <input type="text" name="path" required />
+        <input type="text" name="path" value={path || ''} required />
       </label>
       <button>Go！</button>
     </form>
+    <article>
+      <h1 id="article-title" set:html={path || ''} />
+      <Fragment id="article-content" set:html={promise} />
+    </article>
 </Layout>
 
 
 <script>
-    const form = document.getElementById("form");
-    const user = document.querySelector("input[name=user]");
-    const repo = document.querySelector("input[name=repo]");
-    const path = document.querySelector("input[name=path]");
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
+  const form = document.getElementById("form");
+  const user = document.querySelector("input[name=user]");
+  const repo = document.querySelector("input[name=repo]");
+  const path = document.querySelector("input[name=path]");
+  const articleTitle = document.getElementById("article-title");
+  const articleContent = document.getElementById("article-content");
 
-        const url = `/repos/${user.value}/${repo.value}/contents/${path.value}`;
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
 
-        window.location.href = url;
-    });
+    const url = `/?user=${user.value}&repo=${repo.value}&path=${path.value}`;
+
+    window.location.href = url;
+  });
 </script>
+
+
+<style>
+  h1#article-title {
+    font-size: 2rem;
+  }
+
+  .katex { 
+		/* font-size: 1.1em !important;  */
+		overflow-x: auto;
+		overflow-y: hidden;
+	}
+</style>
