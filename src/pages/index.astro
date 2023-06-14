@@ -44,35 +44,30 @@ if (user && repo && path) {
       return processor.process(raw);
   })
   .then( file => file.toString() )
-  .catch( err => {
-    if (err.status === 404) {
-      return '文件不存在！';
-    } else {
-      return '出现了未知错误！';
-    }
+  .catch( async err => {
+    const json = await err.json();
+    return `Error! Status code ${err.status}. ${json.message}}`;
   });
 } else {
-  promise = Promise.resolve('输入正确的文件信息后此处将会显示渲染后的 markdown 文档');
+  promise = Promise.resolve('After specifing the info of the target markdown file, the rendered markdown content will appear here.');
 }
 
-
-const title = path || '选择文件！';
 ---
 
 
-<Layout title="选择文件！">
+<Layout title={path || 'Choose a file'}>
     <h4>输入渲染的文件信息</h4>
     <form id="form">
       <label>
-        用户：
+        User:
         <input type="text" name="user" value={user || ''} required />
       </label>
       <label>
-        仓库：
+        Repository:
         <input type="text" name="repo" value={repo || ''} required />
       </label>
       <label>
-        路径：
+        Path:
         <input type="text" name="path" value={path || ''} required />
       </label>
       <button>Go！</button>
